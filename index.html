@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kooda — What Will You Be?</title>
+<meta name="theme-color" content="#0a0a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a1a;color:#fff;min-height:100vh;min-height:100dvh;overflow-x:hidden;}
+
+/* Stars */
+#stars{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* Screens */
+.screen{display:none;position:relative;z-index:1;min-height:100vh;min-height:100dvh;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* HOME SCREEN */
+.home{align-items:center;padding:30px 16px 40px;}
+.home-logo{font-size:64px;margin-top:20px;animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+.home h1{font-size:2.2em;margin:12px 0 4px;background:linear-gradient(90deg,#f59e0b,#ef4444,#ec4899,#8b5cf6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;}
+.home .subtitle{color:#a0a0c0;font-size:1em;margin-bottom:24px;text-align:center;}
+.careers{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:400px;width:100%;padding:0 8px;}
+.career-card{background:rgba(99,102,241,0.08);border:2px solid rgba(99,102,241,0.2);border-radius:16px;padding:16px 10px;text-align:center;cursor:pointer;transition:all 0.25s;}
+.career-card:hover,.career-card:active{background:rgba(99,102,241,0.18);transform:translateY(-3px);border-color:rgba(99,102,241,0.5);box-shadow:0 8px 25px rgba(99,102,241,0.15);}
+.career-emoji{font-size:40px;margin-bottom:6px;}
+.career-name{font-size:14px;font-weight:600;color:#e0e0f0;}
+.career-tag{font-size:11px;color:#8080a0;margin-top:2px;}
+.more-label{color:#666;font-size:13px;text-align:center;margin-top:16px;}
+
+/* CHAT SCREEN */
+.chat-screen{height:100vh;height:100dvh;}
+.chat-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,26,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(99,102,241,0.2);flex-shrink:0;}
+.back-btn{background:none;border:none;color:#a78bfa;font-size:22px;cursor:pointer;padding:4px 8px;}
+.chat-avatar{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(135deg,#8b5cf6,#4f8fff);}
+.chat-info h2{font-size:15px;color:#fff;}
+.chat-info span{font-size:11px;color:#22c55e;}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;}
+.chat-messages::-webkit-scrollbar{width:3px;}
+.chat-messages::-webkit-scrollbar-thumb{background:rgba(99,102,241,0.3);border-radius:3px;}
+
+.msg{display:flex;gap:8px;max-width:85%;animation:msgIn 0.3s ease-out;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg.ai{align-self:flex-start;}
+.msg-av{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.msg.ai .msg-av{background:linear-gradient(135deg,#8b5cf6,#4f8fff);}
+.msg.user .msg-av{background:linear-gradient(135deg,#3b82f6,#2563eb);}
+.msg-bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;word-wrap:break-word;}
+.msg.user .msg-bubble{background:linear-gradient(135deg,#4f8fff,#3b7dff);border-bottom-right-radius:4px;}
+.msg.ai .msg-bubble{background:linear-gradient(135deg,#1e1e3a,#252550);border:1px solid rgba(99,102,241,0.2);border-bottom-left-radius:4px;color:#e0e0f0;}
+
+.typing{display:flex;align-items:center;gap:8px;align-self:flex-start;animation:msgIn 0.3s ease-out;}
+.typing-dots{display:flex;gap:4px;padding:10px 14px;background:linear-gradient(135deg,#1e1e3a,#252550);border:1px solid rgba(99,102,241,0.2);border-radius:16px;border-bottom-left-radius:4px;}
+.typing-dots span{width:7px;height:7px;background:#8b5cf6;border-radius:50%;animation:bounce 1.4s infinite;}
+.typing-dots span:nth-child(2){animation-delay:0.2s;}
+.typing-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+
+.chat-input{padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:rgba(10,10,26,0.95);backdrop-filter:blur(20px);border-top:1px solid rgba(99,102,241,0.2);flex-shrink:0;display:flex;gap:8px;}
+.chat-input textarea{flex:1;background:#12122a;border:1px solid rgba(99,102,241,0.2);color:#fff;padding:10px 14px;border-radius:22px;font-size:14px;outline:none;resize:none;min-height:40px;max-height:100px;font-family:inherit;line-height:1.4;}
+.chat-input textarea:focus{border-color:#4f8fff;}
+.chat-input textarea::placeholder{color:#606080;}
+.send-btn{width:40px;height:40px;background:linear-gradient(135deg,#4f8fff,#8b5cf6);border:none;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.2s;}
+.send-btn:active{transform:scale(0.9);}
+.send-btn svg{width:18px;height:18px;fill:white;}
+
+/* Quick questions */
+.quick-qs{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px;}
+.qq{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);color:#a78bfa;padding:6px 12px;border-radius:18px;font-size:12px;cursor:pointer;transition:all 0.2s;}
+.qq:hover{background:rgba(99,102,241,0.2);color:#fff;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<!-- HOME SCREEN -->
+<div class="screen home active" id="homeScreen">
+  <div class="home-logo">🚀</div>
+  <h1>Kooda</h1>
+  <p class="subtitle">What do you want to be when you grow up?<br>Pick one and chat with someone who does it!</p>
+  <div class="careers" id="careerGrid"></div>
+</div>
+
+<!-- CHAT SCREEN -->
+<div class="screen chat-screen" id="chatScreen">
+  <div class="chat-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="chat-avatar" id="chatEmoji"></div>
+    <div class="chat-info">
+      <h2 id="chatName"></h2>
+      <span>● Online now</span>
+    </div>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="quick-qs" id="quickQs"></div>
+  <div class="chat-input">
+    <textarea id="userInput" placeholder="Ask me anything..." rows="1"></textarea>
+    <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+  </div>
+</div>
+
+<script>
+// Stars
+const sc=document.getElementById('stars'),sx=sc.getContext('2d');let stars=[];
+function initStars(){sc.width=innerWidth;sc.height=innerHeight;stars=[];for(let i=0;i<60;i++)stars.push({x:Math.random()*sc.width,y:Math.random()*sc.height,s:Math.random()*1.5+0.5,sp:Math.random()*0.2+0.05,o:Math.random()*0.4+0.1,p:Math.random()*Math.PI*2});}
+function drawStars(){sx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{s.p+=0.015;s.y-=s.sp;if(s.y<-5){s.y=sc.height+5;s.x=Math.random()*sc.width;}sx.beginPath();sx.arc(s.x,s.y,s.s,0,Math.PI*2);sx.fillStyle=`rgba(147,130,255,${s.o*(0.5+0.5*Math.sin(s.p))})`;sx.fill();});requestAnimationFrame(drawStars);}
+addEventListener('resize',initStars);initStars();drawStars();
+
+// Career data
+const careers = [
+  {id:'doctor',emoji:'🩺',name:'Doctor',tag:'Save lives',ai_name:'Dr. Sarah',
+   intro:"Hey! I'm Dr. Sarah, and I've been a doctor for 12 years! I help sick people feel better every day. Being a doctor is one of the coolest jobs because you literally save lives! What do you want to know about being a doctor?",
+   quickQs:["What's a normal day like?","Is medical school hard?","What's the coolest thing you've done?","How much do doctors make?","What subjects should I study?"],
+   responses:{
+     school:"Medical school is about 8 years after high school: 4 years of university and 4 years of medical school. Then you do a residency (training) for 3 to 7 years. It's a LOT of studying, but if you love helping people, it's worth every minute! 📚",
+     day:"I wake up at 6 AM and head to the hospital. I check on my patients, read their charts, order tests, and meet with other doctors. Some days I do surgeries, other days I see patients in the clinic. Every day is different and that's what I love about it! 🏥",
+     money:"Doctors make good money! Most doctors earn between $200,000 and $400,000 per year. Surgeons and specialists can make even more. But remember, you spend a lot of years training and studying first! 💰",
+     cool:"One time I diagnosed a super rare disease that no one else could figure out. The patient had been sick for months, going to different doctors. I ran some extra tests and found it! They're completely healthy now. That feeling of solving the mystery and saving someone... nothing beats it! 🌟",
+     study:"Focus on science and math! Biology, chemistry, and physics are the big ones. But also English (doctors write a lot!) and volunteering at hospitals. Start getting good grades now and you'll be on track! 🧪",
+     default:"That's a great question! As a doctor, I'd say the most important thing is to always be curious and care about people. The human body is amazing, and every patient teaches you something new. What else do you want to know? 😊"
+   }},
+  {id:'astronaut',emoji:'🧑‍🚀',name:'Astronaut',tag:'Explore space',ai_name:'Commander Jake',
+   intro:"Hey there, future space explorer! I'm Commander Jake. I've been to the International Space Station twice and spent 340 days in space! Floating in zero gravity and looking down at Earth... it's unreal. What do you want to know about being an astronaut?",
+   quickQs:["What's space like?","How do you become one?","What do you eat in space?","Is it scary?","What's Earth look like from space?"],
+   responses:{
+     space:"Space is WILD. First, there's no up or down. You just float everywhere! It's completely silent outside the spacecraft. And the view... you can see the whole curve of Earth, the thin blue line of atmosphere, and millions of stars. It changes you forever. 🌍✨",
+     become:"It's tough but possible! Most astronauts have a degree in science, engineering, or math. Many are pilots or have military experience. NASA gets about 18,000 applications and picks maybe 12 people. But don't let that stop you! Start with good grades in science and math, stay fit, and never give up! 🚀",
+     eat:"Space food has gotten way better! We have tortillas instead of bread (crumbs float everywhere!), freeze dried ice cream, and even pizza. We drink water from pouches with straws. The weirdest part? Your taste buds change in space, so everything tastes a bit different! 🍕",
+     scary:"Honestly? Launch day is intense. You're sitting on top of a rocket with millions of pounds of fuel. The whole vehicle shakes like crazy for 8 minutes. But the training prepares you so well that it feels more exciting than scary. The scariest part is spacewalks — just you and the void of space! 😅",
+     earth:"It's the most beautiful thing you'll ever see. Earth glows blue and white, and you can see hurricanes, city lights at night, and the Northern Lights from above. You go around the whole planet every 90 minutes! Seeing it from space makes you realize how precious our planet is. 🌎",
+     default:"Space exploration is humanity's greatest adventure! Every mission teaches us something new. The next generation of astronauts — maybe YOU — might be the first to walk on Mars! What else are you curious about? 🌟"
+   }},
+  {id:'gamer',emoji:'🎮',name:'Game Designer',tag:'Make video games',ai_name:'Alex',
+   intro:"What's up! I'm Alex, and I design video games for a living! I've worked on mobile games, console games, and even VR games. If you love playing games, imagine getting PAID to create them! What do you want to know?",
+   quickQs:["How do you make games?","What games did you work on?","Do you play games at work?","What should I learn?","How much do you earn?"],
+   responses:{
+     make:"Making a game involves a big team! Artists draw the characters, programmers write the code, designers (that's me!) plan the levels and gameplay, and sound designers make the music and effects. We use tools like Unity and Unreal Engine. A big game can take 2 to 5 years to make! 🎨",
+     work:"I can't name the exact games, but I've worked on a popular mobile puzzle game that got 50 million downloads, and a console adventure game. Right now I'm designing a multiplayer game. Every project teaches you something new! 🕹️",
+     play:"Yes! We literally play games at work. We test our own games hundreds of times to make sure they're fun and find bugs. We also play OTHER games to get inspired and see what works. Best job perk ever! 😎",
+     learn:"Start with coding! Learn Scratch (it's free and made for kids), then move to Python or JavaScript. Also practice drawing — game art is huge. And PLAY lots of different games and think about WHY they're fun. That's game design thinking! You can start making games right now with free tools! 💻",
+     earn:"Game designers make around $70,000 to $120,000 per year. Lead designers and creative directors can make $150,000 or more. People at big companies like Nintendo, Rockstar, or Epic Games can earn a lot! 💰",
+     default:"Gaming is an awesome career! The industry makes more money than movies and music combined. And the best part? You create worlds that millions of people enjoy. Keep playing, keep creating, and you'll be amazing! What else do you want to ask? 🎮"
+   }},
+  {id:'youtuber',emoji:'📱',name:'YouTuber',tag:'Make videos',ai_name:'Maya',
+   intro:"Heyy! I'm Maya, and I'm a full time YouTuber with 2 million subscribers! I started making videos in my bedroom when I was 14. Now it's my whole career! Want to know what it's really like? Ask me anything!",
+   quickQs:["How did you start?","How much money do you make?","How do you get subscribers?","What equipment do you need?","Is it hard work?"],
+   responses:{
+     start:"I started with just my phone! No fancy camera, no studio, no editing skills. My first video got like 23 views 😂 But I kept posting every week, got better at editing, and after about a year I hit 1,000 subscribers. The key? Just START. Don't wait until everything is perfect! 📱",
+     money:"At 2 million subs, I make around $15,000 to $30,000 per month from ads. Plus sponsorships (brands pay $5,000 to $50,000 per video), merchandise, and memberships. But I made almost NOTHING for the first year. It takes time! 💰",
+     subs:"Be consistent! Post on a schedule. Make thumbnails that pop. The first 10 seconds of your video are the most important — hook people immediately. And be yourself! People subscribe for YOUR personality. Also, Shorts are HUGE for growth right now! 📈",
+     equip:"Start with your phone. Seriously. Good lighting matters more than an expensive camera. A $20 ring light helps a ton. As you grow, get a nice microphone (audio quality matters!) and then maybe a camera. But MrBeast's first 100 videos were filmed on a cheap webcam! 🎥",
+     hard:"It's way more work than people think! Filming a 10 minute video takes about 2 hours of filming, 6 to 10 hours of editing, plus planning, thumbnails, and responding to comments. I work 50 to 60 hours a week. But I love it so it doesn't feel like work! 💪",
+     default:"Being a YouTuber is the best job for creative people! You're your own boss, you connect with millions of people, and no two days are the same. The hardest part is starting. The second hardest part is not quitting. What else do you want to know? ✨"
+   }},
+  {id:'athlete',emoji:'⚽',name:'Pro Athlete',tag:'Play sports',ai_name:'Marcus',
+   intro:"Yo! I'm Marcus, professional soccer player! I play in the Major League Soccer and I've been on the national team. I've been playing since I was 5 years old. It's a dream come true every time I step on that field! What do you want to know?",
+   quickQs:["How did you go pro?","What's your daily routine?","What do you eat?","How much do you make?","Any advice for me?"],
+   responses:{
+     pro:"I played on every team I could growing up: school team, club team, travel team. I got scouted at a tournament when I was 16 and joined a youth academy. Trained there for 2 years, then signed my first pro contract at 18. It was years of grinding, but when I signed that contract... best day of my life! ⚽",
+     routine:"I wake up at 6:30, eat a big healthy breakfast, then train from 9 AM to 12 PM. That's drills, scrimmages, and fitness. After lunch, I do gym work for 2 hours: weights, agility, speed. Then recovery: ice baths, massage, stretching. I'm in bed by 10 PM. Every. Single. Day. 💪",
+     eat:"Nutrition is EVERYTHING. Breakfast: eggs, oatmeal, fruit. Lunch: chicken or fish with rice and vegetables. Snack: protein shake and nuts. Dinner: lean meat, sweet potatoes, salad. I drink 3 to 4 liters of water a day. No junk food during season! 🥗",
+     money:"MLS players make anywhere from $65,000 to over $6 million per year. The biggest stars in Europe make $20 to $50 million! Average salary is around $400,000. Plus there are endorsement deals with Nike, Adidas, etc. 💰",
+     advice:"Start NOW. Practice every single day, even if it's just 20 minutes of juggling or dribbling. Play on a team. Watch pro games and study what the players do. Stay fit, eat right, and NEVER give up. Most importantly: have fun! If you love the game, the hard work won't feel hard. 🏆",
+     default:"Being a pro athlete is the ultimate dream job! You get paid to play a game you love, travel the world, and inspire millions of fans. It takes insane dedication, but if you want it bad enough, you can make it happen. What else do you want to know? 🌟"
+   }},
+  {id:'chef',emoji:'👨‍🍳',name:'Chef',tag:'Cook amazing food',ai_name:'Chef Marco',
+   intro:"Buongiorno! I'm Chef Marco! I run my own restaurant in New York City with a Michelin star. I've been cooking since I was 8 years old, starting in my grandma's kitchen. Food is art, science, and love all mixed together! What would you like to know?",
+   quickQs:["How did you become a chef?","What's your best dish?","Is kitchen work hard?","How much do chefs make?","What should I cook first?"],
+   responses:{
+     become:"I started cooking with my grandma when I was 8. I went to culinary school at 18, then worked in restaurants in Italy and France for 5 years — starting as the lowest position, washing dishes and chopping onions for HOURS. I worked my way up to head chef, then opened my own place at 32. It was a long journey but I loved every minute! 🍳",
+     dish:"My signature dish is a handmade pasta with truffle cream sauce and crispy pancetta. Simple ingredients, perfect technique. People drive hours to eat it! But honestly? My favorite thing to cook is a perfect pizza. Nothing beats it. 🍕",
+     hard:"YES. Kitchen work is intense. You're on your feet for 12 to 14 hours. It's hot, fast paced, and stressful during dinner rush. You'll burn yourself, cut yourself, and want to quit. But when a customer closes their eyes and smiles at your food... that makes it ALL worth it! 🔥",
+     money:"Starting chefs make about $30,000 to $40,000. Head chefs make $60,000 to $90,000. If you own a successful restaurant, you can make $200,000 or more. Celebrity chefs like Gordon Ramsay? Millions! 💰",
+     cook:"Start with scrambled eggs! Seriously. If you can make perfect scrambled eggs (low heat, patience, butter) you understand the basics of cooking. Then try pasta, then a simple stir fry. Watch YouTube cooking videos and practice. The kitchen is your playground! 🥚",
+     default:"Cooking is one of the most creative jobs in the world! You take raw ingredients and turn them into something that makes people HAPPY. Start cooking at home, experiment with flavors, and taste everything. A great chef never stops learning! What else do you want to know? 😋"
+   }},
+  {id:'scientist',emoji:'🔬',name:'Scientist',tag:'Discover new things',ai_name:'Dr. Chen',
+   intro:"Hello, curious mind! I'm Dr. Chen, a research scientist! I study how the brain works, and my team has published discoveries in top science journals. Science is all about asking 'why?' and then finding the answer. What do you want to know?",
+   quickQs:["What do you discover?","Is science school hard?","What's your lab like?","Do you do experiments?","What should I learn now?"],
+   responses:{
+     discover:"My biggest discovery was finding a new way brain cells communicate with each other! It could help treat diseases like Alzheimer's. Before that, I discovered a protein that helps memories form. Every discovery, no matter how small, pushes humanity forward! 🧠",
+     school:"It's a lot of studying! You do 4 years of university, then 5 to 7 years of graduate school for a PhD. But here's the cool part: in grad school, you're doing YOUR OWN research and making real discoveries! It doesn't feel like school because you're exploring the unknown. 🎓",
+     lab:"My lab is awesome! We have powerful microscopes that can see individual brain cells, machines that measure brain activity, and computers running simulations. There are about 15 people in my lab: students, postdocs, and technicians. We're like a team of explorers! 🔬",
+     experiments:"Every day! That's the best part. We design experiments, test our ideas, and analyze data. Sometimes experiments fail (MOST experiments fail actually!) and that's OK. Failure teaches you something new. When an experiment WORKS though? Best feeling in science! 🧪",
+     learn:"Be curious about EVERYTHING. Ask why the sky is blue, how your phone works, why ice floats. Study math and science in school. Do science fair projects! Read books about science. And most importantly: never be afraid to ask questions. That's literally what scientists do! 📚",
+     default:"Science is the greatest adventure humans have ever been on! We've discovered atoms, DNA, black holes, and the age of the universe. And there's SO much more to discover. Maybe YOU will find the next big thing! What else do you want to know? ⭐"
+   }},
+  {id:'pilot',emoji:'✈️',name:'Pilot',tag:'Fly planes',ai_name:'Captain Amy',
+   intro:"Welcome aboard! I'm Captain Amy, and I fly Boeing 777s for a major airline! I've flown to over 60 countries and logged over 15,000 flight hours. There's nothing like being above the clouds at 40,000 feet! What do you want to know about flying?",
+   quickQs:["How do you fly a plane?","Is flying scary?","How do you become a pilot?","Where have you flown?","How much do pilots make?"],
+   responses:{
+     fly:"Modern planes are incredible machines! You have hundreds of buttons and screens in the cockpit. We use a control stick (or yoke) to steer, throttles to control speed, and pedals for the rudder. Takeoff and landing are the most exciting parts — you're handling a 300 ton machine! The autopilot helps during cruising, but we're always monitoring everything. ✈️",
+     scary:"After thousands of flights? Not really! But I remember my first solo flight — my heart was POUNDING. Turbulence can be uncomfortable but it's totally safe, like bumps in a road. The training is so thorough that you're prepared for anything. Even engine failures! We practice those in simulators all the time. 😊",
+     become:"Start by getting your Private Pilot License (you can begin at 16!). Then get more ratings: Instrument, Commercial, and Airline Transport Pilot. You need at least 1,500 flight hours to fly for an airline. Many pilots start as flight instructors to build hours. Total training takes about 3 to 5 years! 🎓",
+     where:"Everywhere! Tokyo, Sydney, London, Dubai, Rio de Janeiro, Cape Town, Bangkok... over 60 countries! My favorite route is New York to Tokyo — 14 hours over the Pacific. You see the sunrise from 40,000 feet and it's magical. Pilots get free or cheap flights too, so I travel a LOT on my days off! 🌍",
+     money:"Airline captains at major airlines make $200,000 to $400,000 per year! First Officers (co-pilots) make $100,000 to $250,000. Starting pay at regional airlines is lower: around $60,000 to $80,000. But it goes up fast! Plus: travel benefits for you and your family! 💰",
+     default:"Flying is the ultimate freedom! You're literally soaring above the world, connecting people and places. Every sunrise from the cockpit reminds me why I chose this career. If you dream of flying, go for it! Start taking flying lessons as soon as you can. The sky is NOT the limit — it's just the beginning! 🚀"
+   }},
+  {id:'artist',emoji:'🎨',name:'Artist',tag:'Create cool art',ai_name:'Luna',
+   intro:"Hey creative soul! I'm Luna, a professional artist and illustrator! I create art for books, movies, and video games. I've been drawing since I could hold a crayon, and now companies pay me to draw all day! What do you want to know about being an artist?",
+   quickQs:["How did you become an artist?","Can you really make money?","What do you draw?","What tools do you use?","Any tips for me?"],
+   responses:{
+     become:"I drew CONSTANTLY as a kid. In every notebook, on every scrap of paper. I went to art school for 4 years, then started freelancing. My first real job was drawing characters for a mobile game. Now I work with publishers, game studios, and movie companies. The path wasn't straight, but my passion carried me through! 🎨",
+     money:"Yes! Art is a real career. Freelance illustrators make $50,000 to $100,000 per year. Concept artists at game/movie studios make $70,000 to $120,000. Top artists with their own brands, selling prints, NFTs, and courses? Some make millions! 💰",
+     draw:"Everything! Character designs for video games, book cover illustrations, concept art for animated movies, and my own personal art that I sell as prints. Last month I designed an alien creature for a sci fi game. This week I'm illustrating a children's book! Every project is different. 🖼️",
+     tools:"I use an iPad Pro with Procreate for digital art — it's amazing! Also a Wacom tablet with Photoshop for bigger projects. But I still sketch with pencil and paper every day. Traditional art skills are the foundation of everything. Start with pencil, paper, and your imagination! ✏️",
+     tips:"Draw EVERY DAY. Even just 10 minutes of doodling. Don't compare yourself to others. Copy art you like to learn techniques. Watch drawing tutorials on YouTube. And most importantly: don't aim for perfect. Aim for DONE. You'll improve by finishing things, not by being perfect! 🌟",
+     default:"Art is everywhere: in the games you play, the movies you watch, the clothes you wear, the buildings around you. Artists literally shape the world! Keep creating, stay curious, and never let anyone tell you art isn't a 'real' career. It absolutely is! What else do you want to know? ✨"
+   }},
+  {id:'engineer',emoji:'⚙️',name:'Engineer',tag:'Build cool stuff',ai_name:'Sam',
+   intro:"Hey builder! I'm Sam, a mechanical engineer! I design robots and machines that solve real problems. Engineers are the people who turn crazy ideas into real things. Bridges, phones, cars, rockets — engineers built ALL of that! What do you want to know?",
+   quickQs:["What do you build?","Is engineering hard?","What type of engineer?","How much do you make?","What should I study?"],
+   responses:{
+     build:"Right now I'm designing a robot arm that can sort recycling automatically! Before that, I worked on electric car batteries and drone delivery systems. Engineers build everything from skyscrapers to smartphones to medical devices. If it exists and it's useful, an engineer probably designed it! 🤖",
+     hard:"Engineering school is challenging — lots of math, physics, and problem solving. But here's the thing: engineers think differently. We see problems and immediately think 'how can I fix this?' If your brain works that way, engineering will feel natural. Plus the projects are really fun! 💡",
+     type:"There are TONS of types! Mechanical (machines/robots), Electrical (circuits/power), Software (apps/code), Civil (buildings/bridges), Aerospace (planes/rockets), Biomedical (medical devices), Chemical (materials/energy). Pick what excites you most! ⚙️",
+     money:"Engineers make great money! Starting salary is usually $65,000 to $85,000 right out of college. With experience, $100,000 to $180,000. Specialized engineers (AI, aerospace) can make $200,000 or more. Your dad is an engineer — he can tell you! 💰",
+     study:"Math and science are your best friends! Algebra, geometry, physics, and if you can, start learning to code. Also: build stuff! Lego, model kits, simple circuits, anything. Engineers learn by DOING. Get your hands dirty! 🔧",
+     default:"Engineering is like having superpowers. You can look at a problem and BUILD the solution. The world needs more engineers to solve big challenges like climate change, space travel, and clean energy. You could be one of them! What else do you want to know? 🚀"
+   }},
+  {id:'vet',emoji:'🐾',name:'Veterinarian',tag:'Help animals',ai_name:'Dr. Patel',
+   intro:"Hi animal lover! I'm Dr. Patel, a veterinarian! I take care of dogs, cats, rabbits, and even some exotic animals. Every day I help animals feel better and keep them healthy. If you love animals, this could be YOUR dream job! What do you want to know?",
+   quickQs:["What animals do you help?","Is vet school hard?","What's the cutest thing?","How much do vets make?","Do animals bite you?"],
+   responses:{
+     animals:"Mostly dogs and cats, but I also treat rabbits, hamsters, guinea pigs, birds, and reptiles! Some vets specialize in horses, zoo animals, or even marine animals like dolphins! There's a vet for every kind of animal. 🐕🐱🐰",
+     school:"Vet school is as hard as medical school! 4 years of university plus 4 years of vet school. You learn anatomy, surgery, pharmacology, and more — but for LOTS of different species! You need to know about dogs AND cats AND birds AND reptiles. It's a lot but it's fascinating! 🎓",
+     cute:"Oh man, where do I start? Last week a tiny kitten fell asleep in my coat pocket during an exam. Puppies that wag their tails even while getting a shot. A parrot that kept saying 'thank you doctor' after treatment. Animals are the BEST patients! 🥰",
+     money:"Vets make around $90,000 to $130,000 per year. Specialists (surgeons, cardiologists) can make $200,000 or more. It's not the highest paying medical field, but you get PAID to hang out with animals all day! 💰",
+     bite:"Ha! Yes, sometimes! Dogs can nip when they're scared, cats can scratch, and I once got bitten by a parrot (ouch!). We're trained in animal handling and we have assistants who help keep everyone safe. It's part of the job! A few scratches are worth it. 😄",
+     default:"Being a vet is one of the most rewarding jobs ever. Animals can't tell you what's wrong, so you have to be a detective. When a sick animal gets better because of YOUR treatment, it's the best feeling in the world. What else do you want to know? 🐾"
+   }},
+  {id:'teacher',emoji:'📚',name:'Teacher',tag:'Help kids learn',ai_name:'Mr. Rivera',
+   intro:"Hey future leader! I'm Mr. Rivera, and I teach 5th grade! I've been teaching for 10 years and I've helped hundreds of kids learn, grow, and believe in themselves. Teachers don't just teach subjects — we change lives! What do you want to know?",
+   quickQs:["What's teaching like?","Why did you become a teacher?","Is it fun?","How much do teachers make?","What's the best part?"],
+   responses:{
+     like:"Every day is an adventure! I plan lessons, teach math and science, lead discussions, help kids who are struggling, and celebrate when they have 'aha!' moments. No two days are the same because kids are unpredictable in the best way! 📖",
+     why:"I had a 4th grade teacher, Mrs. Johnson, who believed in me when no one else did. She told me I was smart and capable, and it changed my whole life. I became a teacher to be THAT person for other kids. One good teacher can change everything. 🌟",
+     fun:"So much fun! We do science experiments, art projects, debates, field trips, and games. I make learning feel like play. When kids are having fun, they learn 10 times faster. Last week we built volcanoes. Next week we're putting on a play! 🎉",
+     money:"Teachers make $45,000 to $75,000 depending on the state and experience. It's not the highest salary, but you get summers off, holidays, and the reward of watching kids grow. Some teachers earn more with coaching or tutoring. 💰",
+     best:"When a kid who was struggling finally gets it. That moment when their eyes light up and they say 'OHHH I understand now!' THAT is why I teach. I had a student who hated reading — by the end of the year, she was reading chapter books for fun. Moments like that make everything worth it. ❤️",
+     default:"Teaching is a superpower. You shape the future by shaping young minds. Every doctor, astronaut, and game designer had a teacher who inspired them. Maybe one day YOUR students will change the world! What else do you want to know? 🌍"
+   }}
+];
+
+// Render career grid
+const grid = document.getElementById('careerGrid');
+careers.forEach(c => {
+  const div = document.createElement('div');
+  div.className = 'career-card';
+  div.onclick = () => startChat(c);
+  div.innerHTML = `<div class="career-emoji">${c.emoji}</div><div class="career-name">${c.name}</div><div class="career-tag">${c.tag}</div>`;
+  grid.appendChild(div);
+});
+
+// Chat logic
+let currentCareer = null;
+
+function startChat(career) {
+  currentCareer = career;
+  document.getElementById('homeScreen').classList.remove('active');
+  document.getElementById('chatScreen').classList.add('active');
+  document.getElementById('chatEmoji').textContent = career.emoji;
+  document.getElementById('chatName').textContent = career.ai_name;
+  document.getElementById('chatMessages').innerHTML = '';
+  
+  // Show quick questions
+  const qqDiv = document.getElementById('quickQs');
+  qqDiv.innerHTML = '';
+  career.quickQs.forEach(q => {
+    const btn = document.createElement('button');
+    btn.className = 'qq';
+    btn.textContent = q;
+    btn.onclick = () => { document.getElementById('userInput').value = q; sendMsg(); };
+    qqDiv.appendChild(btn);
+  });
+  
+  // AI intro message
+  setTimeout(() => addMsg('ai', career.intro, career.emoji), 300);
+  document.getElementById('userInput').focus();
+}
+
+function goHome() {
+  document.getElementById('chatScreen').classList.remove('active');
+  document.getElementById('homeScreen').classList.add('active');
+  currentCareer = null;
+}
+
+function addMsg(role, text, emoji) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  const av = role === 'ai' ? (emoji || '🤖') : '👤';
+  div.innerHTML = `<div class="msg-av">${av}</div><div class="msg-bubble">${text}</div>`;
+  document.getElementById('chatMessages').appendChild(div);
+  const msgs = document.getElementById('chatMessages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typing';
+  div.innerHTML = `<div class="msg-av" style="background:linear-gradient(135deg,#8b5cf6,#4f8fff);width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;">${currentCareer?.emoji||'🤖'}</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
+  document.getElementById('chatMessages').appendChild(div);
+  const msgs = document.getElementById('chatMessages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() { const t = document.getElementById('typing'); if(t) t.remove(); }
+
+function sendMsg() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text || !currentCareer) return;
+  
+  addMsg('user', text);
+  input.value = '';
+  showTyping();
+  
+  setTimeout(() => {
+    removeTyping();
+    const response = getResponse(text, currentCareer);
+    addMsg('ai', response, currentCareer.emoji);
+  }, 600 + Math.random() * 800);
+}
+
+function getResponse(input, career) {
+  const q = input.toLowerCase();
+  const r = career.responses;
+  
+  // Match keywords to responses
+  if (/school|study|learn|education|college|university|degree|training/i.test(q)) return r.school || r.become || r.study || r.learn || r.default;
+  if (/day|routine|typical|morning|schedule|normal day/i.test(q)) return r.day || r.routine || r.like || r.default;
+  if (/money|salary|earn|pay|rich|income|make/i.test(q)) return r.money || r.earn || r.default;
+  if (/cool|best|amazing|favorite|fun|love|enjoy|reward/i.test(q)) return r.cool || r.best || r.fun || r.cute || r.default;
+  if (/start|begin|first|become|how do|how can|path|step/i.test(q)) return r.become || r.start || r.pro || r.default;
+  if (/hard|difficult|tough|challenge|stress/i.test(q)) return r.hard || r.scary || r.default;
+  if (/what do you|what kind|type|speciali/i.test(q)) return r.build || r.draw || r.discover || r.animals || r.type || r.default;
+  if (/tool|equipment|use|need|gear/i.test(q)) return r.tools || r.equip || r.default;
+  if (/advice|tip|recommend|suggest/i.test(q)) return r.tips || r.advice || r.study || r.learn || r.default;
+  if (/scar|danger|risk|safe|afraid|fear/i.test(q)) return r.scary || r.bite || r.default;
+  if (/eat|food|diet|nutrition/i.test(q)) return r.eat || r.dish || r.cook || r.default;
+  if (/where|travel|place|countr/i.test(q)) return r.where || r.default;
+  if (/space|fly|float|rocket|astronaut/i.test(q)) return r.space || r.fly || r.default;
+  if (/game|play|design/i.test(q)) return r.make || r.play || r.work || r.default;
+  
+  // If question mark, give a thoughtful response
+  if (/\?/.test(q)) return r.default;
+  
+  // Greetings
+  if (/^(hi|hello|hey|yo|sup)/i.test(q)) return `Hey! Great to chat with you! Ask me anything about being a ${career.name.toLowerCase()}! ${career.emoji}`;
+  
+  // Thanks
+  if (/thank|thanks|thx|ty/i.test(q)) return `You're welcome! It was awesome chatting with you. Remember: if you want to be a ${career.name.toLowerCase()}, start working towards it TODAY! You got this! 🌟`;
+  
+  // Bye
+  if (/bye|goodbye|later|cya/i.test(q)) return `See you later, future ${career.name.toLowerCase()}! Keep dreaming big! ${career.emoji}✨`;
+  
+  return r.default;
+}
+
+// Auto-resize input
+const userInput = document.getElementById('userInput');
+userInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+userInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+</script>
+</body>
+</html>
